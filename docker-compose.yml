@@ -63,6 +63,15 @@ services:
       - app3
     restart: always
 
+  discord-notifier:
+    image: python:3.13-slim
+    command: sh -c "pip install flask requests -q && python /app/notifier.py"
+    volumes:
+      - ./notifier.py:/app/notifier.py:ro
+    environment:
+      DISCORD_WEBHOOK: "https://discord.com/api/webhooks/1490046446853030040/Szccmb7OVf2vaDwX3S7Lu59eMIWipBI3OQIAgEKOyvG0mV8zEwjAgrn1jAeCbeX6TIT6"
+    restart: always
+
   alertmanager:
     image: prom/alertmanager:latest
     ports:

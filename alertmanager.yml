@@ -10,13 +10,6 @@ route:
 
 receivers:
   - name: discord
-    slack_configs:
-      - api_url: 'https://discord.com/api/webhooks/1490046446853030040/Szccmb7OVf2vaDwX3S7Lu59eMIWipBI3OQIAgEKOyvG0mV8zEwjAgrn1jAeCbeX6TIT6/slack'
-        channel: '#alerts'
+    webhook_configs:
+      - url: 'http://discord-notifier:5001/alert'
         send_resolved: true
-        title: '{{ .Status | toUpper }}: {{ .CommonLabels.alertname }}'
-        text: |
-          {{ range .Alerts }}
-          *Alert:* {{ .Annotations.summary }}
-          *Severity:* {{ .Labels.severity }}
-          {{ end }}
