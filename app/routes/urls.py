@@ -3,7 +3,9 @@ import random
 import string
 from datetime import datetime, timezone
 from urllib.parse import urlparse
+import os
 
+import redis
 from flask import Blueprint, jsonify, redirect, request
 from peewee import IntegrityError
 from playhouse.shortcuts import model_to_dict
@@ -14,6 +16,13 @@ from app.models.url import Url
 from app.models.user import User
 
 urls_bp = Blueprint("urls", __name__)
+
+# Redis cache (optional - falls back gracefully if not available)
+try:
+    _redis = redis.from_url(os.environ.get("REDIS_URL", "redis://localhost:6379"), decode_responses=True)
+    _redis.ping()
+except Exception:
+    _redis = None
 
 
 def generate_short_code():
@@ -171,14 +180,30 @@ def get_url_stats(short_code):
 
 @urls_bp.route("/<short_code>")
 def redirect_short(short_code):
+    # Check cache first
+    if _redis:
+        cached = _redis.get(f"url:{short_code}")
+        if cached:
+            data = json.loads(cached)
+            if not data["is_active"]:
+                return jsonify({"error": "URL is inactive"}), 404
+            Event.create(url=data["id"], user=None, event_type="click",
+                         timestamp=datetime.now(timezone.utc),
+                         details=json.dumps({"referrer": request.referrer}))
+            return redirect(data["original_url"])
+
     url = Url.get_or_none(Url.short_code == short_code)
     if not url:
         return jsonify({"error": "Short code not found"}), 404
     if not url.is_active:
-        return jsonify({"error": "URL is inactive"}), 404  # return 404 not 410
-    Event.create(
-        url=url, user=None, event_type="click",
-        timestamp=datetime.now(timezone.utc),
-        details=json.dumps({"referrer": request.referrer}),
-    )
+        return jsonify({"error": "URL is inactive"}), 404
+
+    # Cache for 5 minutes
+    if _redis:
+        _redis.setex(f"url:{short_code}", 300,
+                     json.dumps({"id": url.id, "original_url": url.original_url, "is_active": url.is_active}))
+
+    Event.create(url=url, user=None, event_type="click",
+                 timestamp=datetime.now(timezone.utc),
+                 details=json.dumps({"referrer": request.referrer}))
     return redirect(url.original_url)
