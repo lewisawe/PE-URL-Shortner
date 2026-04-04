@@ -5,8 +5,8 @@ const BASE_URL = __ENV.BASE_URL || 'http://localhost:5000';
 
 export const options = {
   stages: [
-    { duration: '10s', target: 50 },   // ramp to 50
-    { duration: '30s', target: 50 },   // hold 50
+    { duration: '10s', target: 200 },  // ramp to 200
+    { duration: '30s', target: 200 },  // hold 200
     { duration: '10s', target: 0 },    // ramp down
   ],
   thresholds: {
