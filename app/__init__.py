@@ -36,6 +36,19 @@ def create_app(database=None):
     def health():
         return jsonify(status="ok")
 
+    @app.route("/logs")
+    def logs():
+        import subprocess
+        try:
+            result = subprocess.run(
+                ["tail", "-n", "100", "/proc/1/fd/1"],
+                capture_output=True, text=True, timeout=3
+            )
+            lines = result.stdout or "No logs available"
+        except Exception:
+            lines = "Log access unavailable in this environment"
+        return app.response_class(lines, mimetype="text/plain")
+
     @app.errorhandler(404)
     def not_found(e):
         return jsonify({"error": "Not found"}), 404
