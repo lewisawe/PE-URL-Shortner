@@ -51,11 +51,21 @@ def list_events():
     return jsonify([serialize_event(e) for e in query.paginate(page, per_page)])
 
 
+@events_bp.route("/events/<int:event_id>")
+def get_event(event_id):
+    event = Event.get_or_none(Event.id == event_id)
+    if not event:
+        return jsonify({"error": "Event not found"}), 404
+    return jsonify(serialize_event(event))
+
+
 @events_bp.route("/events", methods=["POST"])
 def create_event():
     data = request.get_json(silent=True)
     if not data or "event_type" not in data or "url_id" not in data:
         return jsonify({"error": "event_type and url_id are required"}), 400
+    if not isinstance(data["event_type"], str) or not data["event_type"].strip():
+        return jsonify({"error": "event_type must be a non-empty string"}), 400
 
     url = Url.get_or_none(Url.id == data["url_id"])
     if not url:
