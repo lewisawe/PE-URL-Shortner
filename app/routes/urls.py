@@ -175,7 +175,7 @@ def redirect_short(short_code):
     if not url:
         return jsonify({"error": "Short code not found"}), 404
     if not url.is_active:
-        return jsonify({"error": "URL is inactive"}), 410
+        return jsonify({"error": "URL is inactive"}), 404  # return 404 not 410
     Event.create(
         url=url, user=None, event_type="click",
         timestamp=datetime.now(timezone.utc),

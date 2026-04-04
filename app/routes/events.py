@@ -54,15 +54,18 @@ def list_events():
 @events_bp.route("/events", methods=["POST"])
 def create_event():
     data = request.get_json(silent=True)
-    if not data or "event_type" not in data or "url_id" not in data or "user_id" not in data:
-        return jsonify({"error": "event_type, url_id, and user_id are required"}), 400
+    if not data or "event_type" not in data or "url_id" not in data:
+        return jsonify({"error": "event_type and url_id are required"}), 400
 
     url = Url.get_or_none(Url.id == data["url_id"])
     if not url:
         return jsonify({"error": "URL not found"}), 404
-    user = User.get_or_none(User.id == data["user_id"])
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+
+    user = None
+    if data.get("user_id") is not None:
+        user = User.get_or_none(User.id == data["user_id"])
+        if not user:
+            return jsonify({"error": "User not found"}), 404
 
     details = data.get("details")
     if isinstance(details, dict):

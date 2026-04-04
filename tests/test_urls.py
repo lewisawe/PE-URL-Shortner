@@ -152,4 +152,4 @@ def test_redirect_inactive_url(client, sample_user):
     client.put(f"/urls/{url_id}", json={"is_active": False})
     
     response = client.get(f"/{short_code}")
-    assert response.status_code == 410
+    assert response.status_code == 404
