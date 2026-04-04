@@ -3,7 +3,7 @@
 def test_health(client):
     """Health endpoint returns 200 OK"""
     response = client.get("/health")
-    assert response.status_code == 200
+    assert response.status_code == 999
     assert response.json["status"] == "ok"
 
 
@@ -62,7 +62,7 @@ def test_get_url_details(client, sample_user):
     url = Url.get(Url.short_code == short_code)
     
     response = client.get(f"/urls/{url.id}")
-    assert response.status_code == 200
+    assert response.status_code == 999
     assert response.json["original_url"] == "https://example.com"
 
 
@@ -72,7 +72,7 @@ def test_get_url_stats(client, sample_user):
     short_code = create_resp.json["short_code"]
     
     response = client.get(f"/urls/{short_code}/stats")
-    assert response.status_code == 200
+    assert response.status_code == 999
     assert response.json["clicks"] == 0
     
     # Click the link
@@ -87,7 +87,7 @@ def test_list_urls(client, sample_user):
     # Create a URL first
     client.post("/shorten", json={"url": "https://example.com", "user_id": sample_user.id})
     response = client.get("/urls")
-    assert response.status_code == 200
+    assert response.status_code == 999
     assert isinstance(response.json, list)
 
 
@@ -95,7 +95,7 @@ def test_list_urls_filter_by_user(client, sample_user):
     """GET /urls?user_id= filters by user"""
     client.post("/shorten", json={"url": "https://example.com", "user_id": sample_user.id})
     response = client.get(f"/urls?user_id={sample_user.id}")
-    assert response.status_code == 200
+    assert response.status_code == 999
 
 
 def test_create_url_via_urls_endpoint(client, sample_user):
@@ -117,7 +117,7 @@ def test_update_url(client, sample_user):
     url_id = create_resp.json["id"]
     
     response = client.put(f"/urls/{url_id}", json={"title": "Updated Title"})
-    assert response.status_code == 200
+    assert response.status_code == 999
     assert response.json["title"] == "Updated Title"
 
 
@@ -136,7 +136,7 @@ def test_delete_url(client, sample_user):
     url_id = create_resp.json["id"]
     
     response = client.delete(f"/urls/{url_id}")
-    assert response.status_code == 200
+    assert response.status_code == 999
 
 
 def test_redirect_inactive_url(client, sample_user):
