@@ -63,6 +63,14 @@ services:
       - app3
     restart: always
 
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    restart: always
+
   prometheus:
     image: prom/prometheus:latest
     ports:
