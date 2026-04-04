@@ -53,11 +53,15 @@ def test_redirect_success(client, sample_user):
 
 
 def test_get_url_details(client, sample_user):
-    """GET /urls/<short_code> returns URL details"""
+    """GET /urls/<id> returns URL details"""
     create_resp = client.post("/shorten", json={"url": "https://example.com", "user_id": sample_user.id})
     short_code = create_resp.json["short_code"]
     
-    response = client.get(f"/urls/{short_code}")
+    # Get the URL id by looking it up
+    from app.models import Url
+    url = Url.get(Url.short_code == short_code)
+    
+    response = client.get(f"/urls/{url.id}")
     assert response.status_code == 200
     assert response.json["original_url"] == "https://example.com"
 

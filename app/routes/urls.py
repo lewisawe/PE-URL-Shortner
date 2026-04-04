@@ -129,6 +129,46 @@ def delete_url(url_id):
     return jsonify({"message": "URL deleted"}), 200
 
 
+@urls_bp.route("/shorten", methods=["POST"])
+def shorten():
+    data = request.get_json(silent=True)
+    if not data or "url" not in data:
+        return jsonify({"error": "url is required"}), 400
+    if "user_id" not in data:
+        return jsonify({"error": "user_id is required"}), 400
+
+    user = User.get_or_none(User.id == data["user_id"])
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    now = datetime.now(timezone.utc)
+    for _ in range(5):
+        try:
+            with db.atomic():
+                url = Url.create(
+                    user=user, short_code=generate_short_code(),
+                    original_url=data["url"], title=data.get("title"),
+                    is_active=True, created_at=now, updated_at=now,
+                )
+                Event.create(
+                    url=url, user=user, event_type="created", timestamp=now,
+                    details=json.dumps({"short_code": url.short_code, "original_url": data["url"]}),
+                )
+            return jsonify({"short_code": url.short_code, "short_url": f"/{url.short_code}"}), 201
+        except IntegrityError:
+            continue
+    return jsonify({"error": "Failed to generate unique short code"}), 500
+
+
+@urls_bp.route("/urls/<short_code>/stats")
+def get_url_stats(short_code):
+    url = Url.get_or_none(Url.short_code == short_code)
+    if not url:
+        return jsonify({"error": "URL not found"}), 404
+    clicks = Event.select().where(Event.url == url, Event.event_type == "click").count()
+    return jsonify({"short_code": url.short_code, "clicks": clicks, "is_active": url.is_active})
+
+
 @urls_bp.route("/<short_code>")
 def redirect_short(short_code):
     url = Url.get_or_none(Url.short_code == short_code)
@@ -136,4 +176,9 @@ def redirect_short(short_code):
         return jsonify({"error": "Short code not found"}), 404
     if not url.is_active:
         return jsonify({"error": "URL is inactive"}), 410
+    Event.create(
+        url=url, user=None, event_type="click",
+        timestamp=datetime.now(timezone.utc),
+        details=json.dumps({"referrer": request.referrer}),
+    )
     return redirect(url.original_url)
