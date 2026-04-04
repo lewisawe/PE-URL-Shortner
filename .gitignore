@@ -9,9 +9,12 @@ build/
 
 # Virtual environment
 .venv/
+venv/
+env/
 
 # Environment variables
 .env
+.env.local
 
 # uv
 uv.lock
@@ -23,8 +26,11 @@ uv.lock
 *.swo
 *~
 
-# pytest
+# pytest / coverage
 .pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
 
 # OS
 .DS_Store
@@ -32,3 +38,5 @@ Thumbs.db
 
 # Judging (not visible to participants)
 judging/
+ProductionEngineeringQuestLog.md
+hackathon.md
