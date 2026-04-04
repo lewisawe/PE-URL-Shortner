@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["uv", "run", "gunicorn", "-b", "0.0.0.0:5000", "app:create_app()"]
+CMD ["uv", "run", "gunicorn", "-c", "gunicorn.conf.py", "-b", "0.0.0.0:5000", "app:create_app()"]
