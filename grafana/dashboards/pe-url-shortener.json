@@ -1,0 +1,37 @@
+{
+  "title": "PE URL Shortener",
+  "uid": "pe-url-shortener",
+  "panels": [
+    {
+      "id": 1, "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "title": "Request Rate (req/sec)",
+      "type": "timeseries",
+      "targets": [{"expr": "sum(rate(flask_http_request_total[1m])) by (instance)", "legendFormat": "{{instance}}"}],
+      "datasource": "Prometheus"
+    },
+    {
+      "id": 2, "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "title": "Error Rate (5xx/sec)",
+      "type": "timeseries",
+      "targets": [{"expr": "sum(rate(flask_http_request_total{status=~\"5..\"}[1m])) by (instance)", "legendFormat": "{{instance}}"}],
+      "datasource": "Prometheus"
+    },
+    {
+      "id": 3, "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "title": "p95 Latency (seconds)",
+      "type": "timeseries",
+      "targets": [{"expr": "histogram_quantile(0.95, sum(rate(flask_http_request_duration_seconds_bucket[5m])) by (le, instance))", "legendFormat": "{{instance}}"}],
+      "datasource": "Prometheus"
+    },
+    {
+      "id": 4, "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "title": "Active App Instances",
+      "type": "stat",
+      "targets": [{"expr": "count(up{job=\"flask-app\"} == 1)", "legendFormat": "Instances Up"}],
+      "datasource": "Prometheus"
+    }
+  ],
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s"
+}
