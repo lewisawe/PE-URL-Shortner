@@ -32,6 +32,17 @@ def create_app(database=None):
     # Prometheus metrics at /metrics
     PrometheusMetrics(app)
 
+    # Expose CPU/RAM via custom metrics
+    import psutil
+    from prometheus_client import Gauge
+    cpu_gauge = Gauge("system_cpu_percent", "System CPU usage percent")
+    ram_gauge = Gauge("system_ram_percent", "System RAM usage percent")
+
+    @app.before_request
+    def _update_system_metrics():
+        cpu_gauge.set(psutil.cpu_percent())
+        ram_gauge.set(psutil.virtual_memory().percent)
+
     init_db(app, database=database)
 
     from app import models  # noqa: F401

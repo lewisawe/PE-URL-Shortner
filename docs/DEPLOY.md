@@ -57,25 +57,21 @@ docker compose up -d --build
 
 ## Troubleshooting
 
-**App won't start**
-```bash
-docker compose logs app1
-```
+**PostgreSQL sequence drift after CSV import**
+- Symptom: `duplicate key value violates unique constraint` on INSERT
+- Fix: `SELECT setval('user_id_seq', (SELECT MAX(id) FROM "user"));` (repeat for url, event)
 
-**DB connection refused**
-```bash
-docker compose ps db   # check db is healthy
-docker exec pe-url-shortner-db-1 pg_isready
-```
+**Docker restart policy not triggering**
+- Symptom: `docker kill` doesn't restart the container
+- Cause: SIGKILL is treated as intentional stop by Docker
+- Fix: Use `docker exec <container> sh -c "kill -TERM 1"` to simulate a real crash
 
-**Redis not caching**
-```bash
-docker exec pe-url-shortner-redis-1 redis-cli ping
-docker exec pe-url-shortner-redis-1 redis-cli info stats | grep keyspace
-```
+**Alertmanager Discord native integration broken (v0.31)**
+- Symptom: `unexpected status code 400` from Discord
+- Cause: `discord_configs` format changed in Alertmanager v0.31
+- Fix: Use a webhook bridge (`notifier.py`) that converts Alertmanager payload to Discord format
 
-**Port 80 already in use**
-```bash
-sudo lsof -i :80
-# change ports in docker-compose.yml
-```
+**Redis not caching on first deploy**
+- Symptom: All cache misses, DB hit on every redirect
+- Cause: Seed data loaded with explicit IDs but sequences not reset; app errors silently fell back to DB
+- Fix: Reset sequences after CSV load + verify `REDIS_URL` env var is set in container
