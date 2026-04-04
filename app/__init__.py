@@ -34,9 +34,13 @@ def create_app(database=None):
 
     # Expose CPU/RAM via custom metrics
     import psutil
-    from prometheus_client import Gauge
-    cpu_gauge = Gauge("system_cpu_percent", "System CPU usage percent")
-    ram_gauge = Gauge("system_ram_percent", "System RAM usage percent")
+    from prometheus_client import Gauge, REGISTRY
+    if "system_cpu_percent" not in REGISTRY._names_to_collectors:
+        cpu_gauge = Gauge("system_cpu_percent", "System CPU usage percent")
+        ram_gauge = Gauge("system_ram_percent", "System RAM usage percent")
+    else:
+        cpu_gauge = REGISTRY._names_to_collectors["system_cpu_percent"]
+        ram_gauge = REGISTRY._names_to_collectors["system_ram_percent"]
 
     @app.before_request
     def _update_system_metrics():
