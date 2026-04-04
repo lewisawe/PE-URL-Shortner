@@ -66,6 +66,10 @@ def create_event():
         return jsonify({"error": "event_type and url_id are required"}), 400
     if not isinstance(data["event_type"], str) or not data["event_type"].strip():
         return jsonify({"error": "event_type must be a non-empty string"}), 400
+    if not isinstance(data["url_id"], int):
+        return jsonify({"error": "url_id must be an integer"}), 400
+    if data.get("user_id") is not None and not isinstance(data["user_id"], int):
+        return jsonify({"error": "user_id must be an integer"}), 400
 
     url = Url.get_or_none(Url.id == data["url_id"])
     if not url:

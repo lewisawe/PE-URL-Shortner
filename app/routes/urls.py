@@ -76,7 +76,9 @@ def create_url():
     data = request.get_json(silent=True)
     if not data or "original_url" not in data or "user_id" not in data:
         return jsonify({"error": "original_url and user_id are required"}), 400
-    if not is_valid_url(data["original_url"]):
+    if not isinstance(data["user_id"], int):
+        return jsonify({"error": "user_id must be an integer"}), 400
+    if not isinstance(data["original_url"], str) or not is_valid_url(data["original_url"]):
         return jsonify({"error": "Invalid URL format"}), 400
 
     user = User.get_or_none(User.id == data["user_id"])
