@@ -34,6 +34,9 @@ curl http://localhost/health
 - [Deploy & Rollback Guide](docs/DEPLOY.md)
 - [Failure Modes](docs/FAILURE_MODES.md)
 - [Bottleneck Report](docs/BOTTLENECK_REPORT.md)
+- [Runbook](docs/RUNBOOK.md)
+- [Decision Log](docs/DECISION_LOG.md)
+- [Capacity Plan](docs/CAPACITY_PLAN.md)
 
 ## Running Tests
 
