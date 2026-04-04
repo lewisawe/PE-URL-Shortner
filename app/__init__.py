@@ -15,13 +15,19 @@ def create_app(database=None):
     app = Flask(__name__)
 
     # Structured JSON logging
+    json_fmt = logging.Formatter(
+        '{"time": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}'
+    )
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(logging.Formatter(
-        '{"time": "%(asctime)s", "level": "%(levelname)s", "message": "%(message)s"}'
-    ))
+    handler.setFormatter(json_fmt)
+
+    for name in ("", "gunicorn", "gunicorn.access", "gunicorn.error", "werkzeug"):
+        log = logging.getLogger(name)
+        log.handlers = [handler]
+        log.setLevel(logging.INFO)
+
     app.logger.handlers = [handler]
     app.logger.setLevel(logging.INFO)
-    logging.getLogger("werkzeug").handlers = [handler]
 
     # Prometheus metrics at /metrics
     PrometheusMetrics(app)
