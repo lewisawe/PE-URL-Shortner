@@ -24,8 +24,7 @@ services:
       DATABASE_USER: postgres
       DATABASE_PASSWORD: postgres
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     restart: always  # Auto-restart on crash (Chaos Mode)
 
 volumes:
