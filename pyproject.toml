@@ -12,6 +12,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "gunicorn>=25.3.0",
     "pytest>=9.0.2",
     "pytest-cov>=7.1.0",
 ]

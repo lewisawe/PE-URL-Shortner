@@ -80,3 +80,76 @@ def test_get_url_stats(client, sample_user):
     
     response = client.get(f"/urls/{short_code}/stats")
     assert response.json["clicks"] == 1
+
+
+def test_list_urls(client, sample_user):
+    """GET /urls returns list of URLs"""
+    # Create a URL first
+    client.post("/shorten", json={"url": "https://example.com", "user_id": sample_user.id})
+    response = client.get("/urls")
+    assert response.status_code == 200
+    assert isinstance(response.json, list)
+
+
+def test_list_urls_filter_by_user(client, sample_user):
+    """GET /urls?user_id= filters by user"""
+    client.post("/shorten", json={"url": "https://example.com", "user_id": sample_user.id})
+    response = client.get(f"/urls?user_id={sample_user.id}")
+    assert response.status_code == 200
+
+
+def test_create_url_via_urls_endpoint(client, sample_user):
+    """POST /urls creates a URL"""
+    response = client.post("/urls", json={
+        "user_id": sample_user.id,
+        "original_url": "https://example.com/test"
+    })
+    assert response.status_code == 201
+    assert "short_code" in response.json
+
+
+def test_update_url(client, sample_user):
+    """PUT /urls/<id> updates URL"""
+    create_resp = client.post("/urls", json={
+        "user_id": sample_user.id,
+        "original_url": "https://example.com"
+    })
+    url_id = create_resp.json["id"]
+    
+    response = client.put(f"/urls/{url_id}", json={"title": "Updated Title"})
+    assert response.status_code == 200
+    assert response.json["title"] == "Updated Title"
+
+
+def test_update_url_not_found(client):
+    """PUT /urls/<id> returns 404 for missing URL"""
+    response = client.put("/urls/99999", json={"title": "test"})
+    assert response.status_code == 404
+
+
+def test_delete_url(client, sample_user):
+    """DELETE /urls/<id> deletes URL"""
+    create_resp = client.post("/urls", json={
+        "user_id": sample_user.id,
+        "original_url": "https://example.com"
+    })
+    url_id = create_resp.json["id"]
+    
+    response = client.delete(f"/urls/{url_id}")
+    assert response.status_code == 200
+
+
+def test_redirect_inactive_url(client, sample_user):
+    """GET /<short_code> returns 410 for inactive URL"""
+    create_resp = client.post("/urls", json={
+        "user_id": sample_user.id,
+        "original_url": "https://example.com"
+    })
+    url_id = create_resp.json["id"]
+    short_code = create_resp.json["short_code"]
+    
+    # Deactivate the URL
+    client.put(f"/urls/{url_id}", json={"is_active": False})
+    
+    response = client.get(f"/{short_code}")
+    assert response.status_code == 410
