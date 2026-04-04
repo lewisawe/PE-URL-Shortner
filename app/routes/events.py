@@ -78,6 +78,9 @@ def create_event():
             return jsonify({"error": "User not found"}), 404
 
     details = data.get("details")
+    # Fractured Vessel + Deceitful Scroll: details must be a dict or None, not a plain string
+    if details is not None and not isinstance(details, dict):
+        return jsonify({"error": "details must be a JSON object"}), 400
     if isinstance(details, dict):
         details = json.dumps(details)
 
