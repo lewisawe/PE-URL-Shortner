@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import sys
 
 from dotenv import load_dotenv
@@ -21,12 +22,18 @@ def create_app(database=None):
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(json_fmt)
 
+    # In-memory log buffer for /logs endpoint
+    from logging.handlers import MemoryHandler
+    mem_handler = logging.handlers.MemoryHandler(capacity=200, flushLevel=logging.CRITICAL)
+    mem_handler.setFormatter(json_fmt)
+    app.config["LOG_BUFFER"] = mem_handler
+
     for name in ("", "gunicorn", "gunicorn.access", "gunicorn.error", "werkzeug"):
         log = logging.getLogger(name)
-        log.handlers = [handler]
+        log.handlers = [handler, mem_handler]
         log.setLevel(logging.INFO)
 
-    app.logger.handlers = [handler]
+    app.logger.handlers = [handler, mem_handler]
     app.logger.setLevel(logging.INFO)
 
     # Prometheus metrics at /metrics
@@ -59,15 +66,11 @@ def create_app(database=None):
 
     @app.route("/logs")
     def logs():
-        import subprocess
-        try:
-            result = subprocess.run(
-                ["tail", "-n", "100", "/proc/1/fd/1"],
-                capture_output=True, text=True, timeout=3
-            )
-            lines = result.stdout or "No logs available"
-        except Exception:
-            lines = "Log access unavailable in this environment"
+        mem = app.config.get("LOG_BUFFER")
+        if mem and mem.buffer:
+            lines = "\n".join(mem.format(r) for r in mem.buffer[-100:])
+        else:
+            lines = "No logs available"
         return app.response_class(lines, mimetype="text/plain")
 
     @app.errorhandler(404)

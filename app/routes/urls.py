@@ -148,6 +148,10 @@ def shorten():
     if "user_id" not in data:
         return jsonify({"error": "user_id is required"}), 400
 
+    parsed = urlparse(data["url"])
+    if not parsed.scheme or not parsed.netloc:
+        return jsonify({"error": "Invalid URL format"}), 400
+
     user = User.get_or_none(User.id == data["user_id"])
     if not user:
         return jsonify({"error": "User not found"}), 404
